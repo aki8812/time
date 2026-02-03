@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Time</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Roboto+Mono:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="input-area">
+        <div class="input-row">
+            <label for="utc-input">UTC 時區</label>
+            <input type="number" id="utc-input" placeholder="自動" min="-12" max="14" step="1">
+        </div>
+    </div>
+
+    <div class="app-container">
+        <div class="date-display" id="date">Loading...</div>
+        <div class="time-display" id="time">00:00:00</div>
+        <div class="controls">
+            <label class="switch-label">
+                <input type="checkbox" id="format-toggle">
+                <span class="slider"></span>
+                <span class="label-text">24小時制</span>
+            </label>
+        </div>
+    </div>
+    <div id="aki-footer">made by Aki</div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
