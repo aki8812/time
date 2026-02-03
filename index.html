@@ -16,24 +16,64 @@
 </head>
 
 <body>
-    <div id="input-area">
-        <div class="input-row">
-            <label for="utc-input">UTC 時區</label>
-            <input type="number" id="utc-input" placeholder="自動" min="-12" max="14" step="1">
+    <button id="settings-btn" title="設定">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
+        </svg>
+    </button>
+
+    <div class="app-container">
+        <div class="clock-box" id="clock-box">
+            <div class="date-display" id="date">Loading...</div>
+            <div class="time-display">
+                <span id="time">00:00:00</span>
+                <span id="ampm"></span>
+            </div>
         </div>
     </div>
 
-    <div class="app-container">
-        <div class="date-display" id="date">Loading...</div>
-        <div class="time-display" id="time">00:00:00</div>
-        <div class="controls">
-            <label class="switch-label">
-                <input type="checkbox" id="format-toggle">
-                <span class="slider"></span>
-                <span class="label-text">24小時制</span>
-            </label>
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>設定</h2>
+                <button id="modal-close-btn">&times;</button>
+            </div>
+
+            <div class="settings-group">
+                <div class="setting-item">
+                    <label>時區 (UTC)</label>
+                    <div class="stepper-container">
+                        <button id="utc-dec" class="step-btn">-</button>
+                        <input type="text" id="utc-display" value="+8" readonly>
+                        <button id="utc-inc" class="step-btn">+</button>
+                    </div>
+                    <input type="number" id="utc-input" style="display: none;" min="-12" max="14" step="1">
+                </div>
+
+                <div class="setting-item">
+                    <label>時間顯示格式</label>
+                    <label class="switch-label">
+                        <input type="checkbox" id="format-toggle">
+                        <span class="slider"></span>
+                        <span class="label-text">24小時制</span>
+                    </label>
+                </div>
+
+                <div class="setting-item">
+                    <label>時鐘放縮率</label>
+                    <div class="slider-container">
+                        <input type="range" id="scale-slider" min="0.5" max="2.0" step="0.1" value="1.0">
+                        <span id="scale-value">1.0x</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
     <div id="aki-footer">Made by Aki</div>
 
     <script src="script.js"></script>

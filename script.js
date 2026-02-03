@@ -1,12 +1,24 @@
 const timeEl = document.getElementById('time');
+const ampmEl = document.getElementById('ampm');
 const dateEl = document.getElementById('date');
 const formatToggle = document.getElementById('format-toggle');
 const labelText = document.querySelector('.label-text');
 const utcInput = document.getElementById('utc-input');
+const utcDisplay = document.getElementById('utc-display');
+const utcDec = document.getElementById('utc-dec');
+const utcInc = document.getElementById('utc-inc');
+
+const settingsBtn = document.getElementById('settings-btn');
+const settingsModal = document.getElementById('settings-modal');
+const modalCloseBtn = document.getElementById('modal-close-btn');
+const scaleSlider = document.getElementById('scale-slider');
+const scaleValue = document.getElementById('scale-value');
+const clockBox = document.getElementById('clock-box');
 
 let is24Hour = localStorage.getItem('is24Hour') !== 'false';
 let utcOffsetStr = localStorage.getItem('utcOffset');
 let utcOffset = null;
+let clockScale = parseFloat(localStorage.getItem('clockScale')) || 1.0;
 
 if (utcOffsetStr !== null && utcOffsetStr !== "NaN" && utcOffsetStr !== "") {
     let num = parseInt(utcOffsetStr);
@@ -16,10 +28,24 @@ if (utcOffsetStr !== null && utcOffsetStr !== "NaN" && utcOffsetStr !== "") {
 }
 
 formatToggle.checked = is24Hour;
-if (utcOffset !== null) {
-    utcInput.value = utcOffset;
-}
+updateUTCUI();
+scaleSlider.value = clockScale;
+applyScale(clockScale);
 updateLabel();
+
+settingsBtn.addEventListener('click', () => {
+    settingsModal.classList.add('active');
+});
+
+modalCloseBtn.addEventListener('click', () => {
+    settingsModal.classList.remove('active');
+});
+
+settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) {
+        settingsModal.classList.remove('active');
+    }
+});
 
 formatToggle.addEventListener('change', (e) => {
     is24Hour = e.target.checked;
@@ -28,23 +54,50 @@ formatToggle.addEventListener('change', (e) => {
     updateLabel();
 });
 
-utcInput.addEventListener('change', (e) => {
-    const val = e.target.value;
-    if (val === '') {
-        utcOffset = null;
-        localStorage.removeItem('utcOffset');
+function updateUTCUI() {
+    if (utcOffset === null) {
+        utcDisplay.value = "自動";
     } else {
-        let num = parseInt(val);
-        if (isNaN(num)) num = 0;
-        if (num < -12) num = -12;
-        if (num > 14) num = 14;
-
-        utcOffset = num;
-        utcInput.value = num;
-        localStorage.setItem('utcOffset', utcOffset);
+        const prefix = utcOffset >= 0 ? "+" : "";
+        utcDisplay.value = prefix + utcOffset;
     }
+}
+
+utcDec.addEventListener('click', () => {
+    if (utcOffset === null) {
+        const local = -(new Date().getTimezoneOffset() / 60);
+        utcOffset = local - 1;
+    } else {
+        utcOffset = Math.max(-12, utcOffset - 1);
+    }
+    localStorage.setItem('utcOffset', utcOffset);
+    updateUTCUI();
     updateTime();
 });
+
+utcInc.addEventListener('click', () => {
+    if (utcOffset === null) {
+        const local = -(new Date().getTimezoneOffset() / 60);
+        utcOffset = local + 1;
+    } else {
+        utcOffset = Math.min(14, utcOffset + 1);
+    }
+    localStorage.setItem('utcOffset', utcOffset);
+    updateUTCUI();
+    updateTime();
+});
+
+scaleSlider.addEventListener('input', (e) => {
+    const val = parseFloat(e.target.value);
+    applyScale(val);
+});
+
+function applyScale(val) {
+    clockScale = val;
+    scaleValue.textContent = `${val.toFixed(1)}x`;
+    document.documentElement.style.setProperty('--clock-scale', val);
+    localStorage.setItem('clockScale', val);
+}
 
 function updateLabel() {
     labelText.textContent = is24Hour ? '24小時制' : '12小時制';
@@ -113,9 +166,11 @@ function updateTime() {
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12;
             hours = hours ? hours : 12;
-            timeEl.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+            timeEl.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+            ampmEl.textContent = ampm;
         } else {
             timeEl.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+            ampmEl.textContent = '';
         }
     } catch (err) {
         console.error("Time update failed", err);
