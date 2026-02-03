@@ -3,7 +3,6 @@ const dateEl = document.getElementById('date');
 const formatToggle = document.getElementById('format-toggle');
 const labelText = document.querySelector('.label-text');
 const utcInput = document.getElementById('utc-input');
-
 let is24Hour = localStorage.getItem('is24Hour') !== 'false';
 let utcOffset = localStorage.getItem('utcOffset');
 
@@ -37,13 +36,10 @@ utcInput.addEventListener('change', (e) => {
     updateTime();
 });
 
-updateTime();
-setInterval(updateTime, 1000);
-
 function updateLabel() {
     labelText.textContent = is24Hour ? '24小時制' : '12小時制';
 }
-
+---
 const footer = document.getElementById('aki-footer');
 const text = footer.textContent;
 footer.textContent = '';
@@ -64,6 +60,7 @@ document.addEventListener('mousemove', (e) => {
 
     spans.forEach(span => {
         const rect = span.getBoundingClientRect();
+
         const charX = rect.left + rect.width / 2;
         const charY = rect.top + rect.height / 2;
 
@@ -86,7 +83,6 @@ document.addEventListener('mousemove', (e) => {
 
 function updateTime() {
     let now = new Date();
-
     if (utcOffset !== null) {
         const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
         now = new Date(utc + (3600000 * utcOffset));
@@ -96,31 +92,30 @@ function updateTime() {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     dateEl.textContent = `${year}-${month}-${day}`;
-
     let hours = now.getHours();
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
-
     if (!is24Hour) {
         const ampm = hours >= 12 ? 'PM' : 'AM';
         hours = hours % 12;
-        hours = hours ? hours : 12;
+        hours = hours ? hours : 12; // the hour '0' should be '12'
         timeEl.textContent = `${orders(hours)}:${minutes}:${seconds} ${ampm}`;
     } else {
         timeEl.textContent = `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+    }
+}
 
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('SW registered!', reg))
-                    .catch(err => console.log('SW failed!', err));
-            });
-        }
+function orders(h) {
+    return String(h).padStart(2, '0');
+}
 
-        function orders(h) {
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('SW registered!', reg))
+            .catch(err => console.log('SW failed!', err));
+    });
+}
 
-            return String(h).padStart(2, '0');
-        }
-
-        updateTime();
-        setInterval(updateTime, 1000);
+updateTime();
+setInterval(updateTime, 1000);
