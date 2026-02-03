@@ -1,6 +1,6 @@
 {
-    "name": "Simple Time",
-    "short_name": "Time",
+    "name": "Simple Clock",
+    "short_name": "Simple Clock",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#2c2f33",
