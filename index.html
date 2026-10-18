@@ -1,78 +1,190 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-TW" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0d14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Simple Clock</title>
     <link rel="icon" href="favicon.ico">
+    <link rel="apple-touch-icon" href="icon/icon-512x512.png">
     <link rel="manifest" href="manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Roboto+Mono:wght@300;400;500&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script>
+        try {
+            const mode = localStorage.getItem('themeMode') || 'auto';
+            const dark = mode === 'dark' || (mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        } catch (err) {
+            console.warn('主題初始化失敗', err);
+        }
+    </script>
 </head>
 
 <body>
-    <button id="settings-btn" title="設定">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-            </path>
-        </svg>
-    </button>
+    <svg class="lg-defs" aria-hidden="true" focusable="false">
+        <defs id="lg-defs"></defs>
+    </svg>
 
-    <div class="app-container">
-        <div class="clock-box" id="clock-box">
-            <div class="date-display" id="date">Loading...</div>
-            <div class="time-display">
-                <span id="time">00:00:00</span>
-                <span id="ampm"></span>
+    <div class="scene" aria-hidden="true">
+        <div class="orb orb-a"></div>
+        <div class="orb orb-b"></div>
+        <div class="orb orb-c"></div>
+        <div class="orb orb-d"></div>
+        <div class="grid"></div>
+        <div class="dial">
+            <div class="dial-minor"></div>
+            <div class="dial-major"></div>
+            <div class="dial-sweep" id="dial-sweep"></div>
+        </div>
+    </div>
+
+    <header class="dock glass" id="dock" data-lg="pill">
+        <div class="seg" id="theme-seg" role="radiogroup" aria-label="外觀">
+            <span class="seg-thumb" aria-hidden="true"></span>
+            <span class="tip-wrap">
+                <button class="seg-btn" data-mode="light" role="radio" aria-label="淺色">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" /><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6" /></svg>
+                </button>
+                <span class="tip">淺色</span>
+            </span>
+            <span class="tip-wrap">
+                <button class="seg-btn" data-mode="auto" role="radio" aria-label="跟隨系統">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" class="fill" /></svg>
+                </button>
+                <span class="tip">跟隨系統</span>
+            </span>
+            <span class="tip-wrap">
+                <button class="seg-btn" data-mode="dark" role="radio" aria-label="深色">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 14.6A8.6 8.6 0 0 1 9.4 3.8a8.6 8.6 0 1 0 10.8 10.8z" /></svg>
+                </button>
+                <span class="tip">深色</span>
+            </span>
+        </div>
+        <span class="dock-divider" aria-hidden="true"></span>
+        <span class="tip-wrap" id="fs-wrap">
+            <button class="icon-btn" id="fs-btn" aria-label="全螢幕">
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="ico-enter"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15" /></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true" class="ico-exit"><path d="M9 4v3.5A1.5 1.5 0 0 1 7.5 9H4M20 9h-3.5A1.5 1.5 0 0 1 15 7.5V4M15 20v-3.5a1.5 1.5 0 0 1 1.5-1.5H20M4 15h3.5A1.5 1.5 0 0 1 9 16.5V20" /></svg>
+            </button>
+            <span class="tip" id="fs-tip">全螢幕</span>
+        </span>
+        <span class="tip-wrap">
+            <button class="icon-btn gear" id="settings-btn" aria-label="設定" aria-haspopup="dialog">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
+            </button>
+            <span class="tip tip-align-end">設定</span>
+        </span>
+    </header>
+
+    <main class="stage">
+        <section class="clock glass" id="clock" data-lg="panel" role="timer" aria-live="off">
+            <div class="clock-head">
+                <span class="date" id="date"></span>
+                <span class="zone" id="zone-chip"></span>
+            </div>
+            <div class="clock-face" aria-hidden="true">
+                <div class="hm">
+                    <span class="group" id="hours"></span>
+                    <span class="colon" id="colon"><i></i><i></i></span>
+                    <span class="group" id="minutes"></span>
+                </div>
+                <div class="side">
+                    <span class="ampm" id="ampm"></span>
+                    <span class="group sec" id="seconds"></span>
+                </div>
+            </div>
+            <div class="progress" aria-hidden="true"><span id="progress-fill"></span></div>
+        </section>
+    </main>
+
+    <div class="overlay" id="settings-modal" aria-hidden="true">
+        <div class="sheet glass" data-lg="sheet" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <div class="sheet-head">
+                <h2 id="settings-title">設定</h2>
+                <span class="tip-wrap">
+                    <button class="icon-btn" id="modal-close-btn" aria-label="關閉">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    </button>
+                    <span class="tip tip-align-end">關閉</span>
+                </span>
+            </div>
+
+            <div class="row">
+                <div class="row-text">
+                    <span class="row-title">時區</span>
+                    <span class="row-desc" id="utc-desc">跟隨裝置時區</span>
+                </div>
+                <div class="stepper">
+                    <span class="tip-wrap">
+                        <button class="step-btn" id="utc-dec" aria-label="減少一小時">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" /></svg>
+                        </button>
+                        <span class="tip tip-top">往西一小時</span>
+                    </span>
+                    <output class="step-value" id="utc-display">自動</output>
+                    <span class="tip-wrap">
+                        <button class="step-btn" id="utc-inc" aria-label="增加一小時">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12M12 6v12" /></svg>
+                        </button>
+                        <span class="tip tip-top">往東一小時</span>
+                    </span>
+                    <span class="tip-wrap">
+                        <button class="reset-btn" id="utc-reset">自動</button>
+                        <span class="tip tip-top tip-align-end">恢復裝置時區</span>
+                    </span>
+                </div>
+            </div>
+
+            <label class="row" for="format-toggle">
+                <div class="row-text">
+                    <span class="row-title">24 小時制</span>
+                    <span class="row-desc label-text">目前：24 小時制</span>
+                </div>
+                <span class="switch">
+                    <input type="checkbox" id="format-toggle">
+                    <span class="switch-slider"></span>
+                </span>
+            </label>
+
+            <label class="row" for="seconds-toggle">
+                <div class="row-text">
+                    <span class="row-title">顯示秒數</span>
+                    <span class="row-desc">關閉後只留時與分，畫面更清爽</span>
+                </div>
+                <span class="switch">
+                    <input type="checkbox" id="seconds-toggle">
+                    <span class="switch-slider"></span>
+                </span>
+            </label>
+
+            <label class="row" for="wake-toggle" id="wake-row">
+                <div class="row-text">
+                    <span class="row-title">螢幕常亮</span>
+                    <span class="row-desc">當桌鐘使用時不讓螢幕自動關閉</span>
+                </div>
+                <span class="switch">
+                    <input type="checkbox" id="wake-toggle">
+                    <span class="switch-slider"></span>
+                </span>
+            </label>
+
+            <div class="row row-stack">
+                <div class="row-text row-inline">
+                    <span class="row-title">時鐘大小</span>
+                    <span class="row-value" id="scale-value">1.0x</span>
+                </div>
+                <input type="range" class="ios-range" id="scale-slider" min="0.5" max="2" step="0.05" value="1" aria-label="時鐘大小">
             </div>
         </div>
     </div>
 
-    <div id="settings-modal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>設定</h2>
-                <button id="modal-close-btn">&times;</button>
-            </div>
-
-            <div class="settings-group">
-                <div class="setting-item">
-                    <label>時區 (UTC)</label>
-                    <div class="stepper-container">
-                        <button id="utc-dec" class="step-btn">-</button>
-                        <input type="text" id="utc-display" value="+8" readonly>
-                        <button id="utc-inc" class="step-btn">+</button>
-                    </div>
-                    <input type="number" id="utc-input" style="display: none;" min="-12" max="14" step="1">
-                </div>
-
-                <div class="setting-item">
-                    <label>時間顯示格式</label>
-                    <label class="switch-label">
-                        <input type="checkbox" id="format-toggle">
-                        <span class="slider"></span>
-                        <span class="label-text">24小時制</span>
-                    </label>
-                </div>
-
-                <div class="setting-item">
-                    <label>時鐘放縮率</label>
-                    <div class="slider-container">
-                        <input type="range" id="scale-slider" min="0.5" max="2.0" step="0.1" value="1.0">
-                        <span id="scale-value">1.0x</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="toast" id="toast" role="status"></div>
 
     <div id="aki-footer">Made by Aki</div>
 
