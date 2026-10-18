@@ -2,6 +2,12 @@ const root = document.documentElement;
 const $ = (id) => document.getElementById(id);
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
 const pad = (n) => String(n).padStart(2, '0');
+const svgNs = 'http://www.w3.org/2000/svg';
+const svgNode = (tag, attrs) => {
+    const n = document.createElementNS(svgNs, tag);
+    Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, String(v)));
+    return n;
+};
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const darkQuery = matchMedia('(prefers-color-scheme: dark)');
 
@@ -26,47 +32,96 @@ const store = {
         } catch (err) {
             console.warn('儲存設定失敗', err);
         }
+    },
+    remove(key) {
+        try {
+            localStorage.removeItem(key);
+        } catch (err) {
+            console.warn('清除設定失敗', err);
+        }
     }
 };
 
-const readOffset = () => {
-    const raw = store.get('utcOffset', null);
-    if (raw === null || raw === '' || raw === 'auto' || typeof raw === 'boolean') return null;
-    const n = Number(raw);
-    return Number.isFinite(n) ? clamp(n, -12, 14) : null;
-};
-
-const readScale = () => {
-    const n = Number(store.get('clockScale', 1));
-    return Number.isFinite(n) ? clamp(n, 0.5, 2) : 1;
-};
+const timeEl = $('time');
+const ampmEl = $('ampm');
+const dateEl = $('date');
+const formatToggle = $('format-toggle');
+const labelText = document.querySelector('.label-text');
+const utcDisplay = $('utc-display');
+const utcDec = $('utc-dec');
+const utcInc = $('utc-inc');
+const settingsBtn = $('settings-btn');
+const settingsModal = $('settings-modal');
+const modalCloseBtn = $('modal-close-btn');
+const scaleSlider = $('scale-slider');
+const scaleValue = $('scale-value');
+const themeMeta = document.querySelector('meta[name="theme-color"]');
+const seg = $('theme-seg');
+const segThumb = seg.querySelector('.seg-thumb');
+const segBtns = [...seg.querySelectorAll('.seg-btn')];
+const styleBtn = $('style-btn');
+const styleTip = $('style-tip');
+const choiceBtns = [...document.querySelectorAll('#style-choice .choice-btn')];
+const face = $('w-face');
+const sweep = $('w-sweep');
+const wDate = $('w-date');
+const wTime = $('w-time');
+const wAmpm = $('w-ampm');
+const wZone = $('w-zone');
+const hands = { hour: $('h-hour'), min: $('h-min'), sec: $('h-sec') };
+const glassEls = [...document.querySelectorAll('.glass')];
 
 const themeModes = ['light', 'auto', 'dark'];
-const state = {
-    themeMode: themeModes.includes(store.get('themeMode', 'auto')) ? store.get('themeMode', 'auto') : 'auto',
-    is24: store.get('is24Hour', true) !== false,
-    showSeconds: store.get('showSeconds', true) !== false,
-    wakeLock: store.get('wakeLock', false) === true,
-    scale: readScale(),
-    offset: readOffset()
+const clockStyles = ['classic', 'glass'];
+const styleLabels = { classic: '切換成液態玻璃時鐘', glass: '切換成經典數字時鐘' };
+const weekdays = '日一二三四五六';
+
+const parseOffset = (value) => {
+    const num = parseInt(value, 10);
+    return Number.isNaN(num) ? null : clamp(num, -12, 14);
 };
 
-const toastEl = $('toast');
-let toastTimer = 0;
-const showToast = (msg) => {
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+const pick = (key, list, fallback) => {
+    const value = store.get(key, fallback);
+    return list.includes(value) ? value : fallback;
+};
+
+const state = {
+    themeMode: pick('themeMode', themeModes, 'auto'),
+    clockStyle: pick('clockStyle', clockStyles, 'classic'),
+    is24Hour: store.get('is24Hour', true) !== false,
+    utcOffset: parseOffset(store.get('utcOffset', null)),
+    clockScale: parseFloat(store.get('clockScale', 1)) || 1
+};
+
+const localOffset = () => -new Date().getTimezoneOffset() / 60;
+
+const getNow = () => {
+    const now = new Date();
+    if (state.utcOffset === null) return now;
+    return new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 3600000 * state.utcOffset);
+};
+
+const zoneLabel = () => {
+    const offset = state.utcOffset ?? localOffset();
+    const abs = Math.abs(offset);
+    const h = Math.floor(abs);
+    const m = Math.round((abs - h) * 60);
+    return `UTC${offset < 0 ? '-' : '+'}${h}${m ? `:${pad(m)}` : ''}`;
+};
+
+const centerOf = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
 };
 
 const liquidGlass = (() => {
-    const ns = 'http://www.w3.org/2000/svg';
     const defs = $('lg-defs');
     const presets = {
         panel: { scale: 74, blur: 2.4, bezel: 0.24 },
         pill: { scale: 36, blur: 1.2, bezel: 0.5 },
-        sheet: { scale: 60, blur: 7, bezel: 0.2 }
+        sheet: { scale: 60, blur: 7, bezel: 0.2 },
+        dial: { scale: 90, blur: 1.6, bezel: 0.16 }
     };
     const channels = [
         ['r', 1, '1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'],
@@ -82,12 +137,6 @@ const liquidGlass = (() => {
             return false;
         }
     })();
-
-    const node = (tag, attrs) => {
-        const n = document.createElementNS(ns, tag);
-        Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, String(v)));
-        return n;
-    };
 
     const buildMap = (w, h, r, bezel) => {
         const k = w * h > 140000 ? 0.5 : 1;
@@ -150,24 +199,16 @@ const liquidGlass = (() => {
             el.lgVer = (el.lgVer ?? 0) + 1;
             const id = `${el.lgBase}-${el.lgVer}`;
             const bezel = clamp(Math.min(w, h) * p.bezel, 10, 64);
-            const filter = node('filter', {
-                id,
-                x: 0,
-                y: 0,
-                width: w,
-                height: h,
-                filterUnits: 'userSpaceOnUse',
-                'color-interpolation-filters': 'sRGB'
-            });
-            filter.append(node('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: p.blur, result: 'blur' }));
-            filter.append(node('feImage', { href: buildMap(w, h, r, bezel), x: 0, y: 0, width: w, height: h, preserveAspectRatio: 'none', result: 'map' }));
+            const filter = svgNode('filter', { id, x: 0, y: 0, width: w, height: h, filterUnits: 'userSpaceOnUse', 'color-interpolation-filters': 'sRGB' });
+            filter.append(svgNode('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: p.blur, result: 'blur' }));
+            filter.append(svgNode('feImage', { href: buildMap(w, h, r, bezel), x: 0, y: 0, width: w, height: h, preserveAspectRatio: 'none', result: 'map' }));
             channels.forEach(([c, f, values]) => {
-                filter.append(node('feDisplacementMap', { in: 'blur', in2: 'map', scale: p.scale * f, xChannelSelector: 'R', yChannelSelector: 'G', result: `d${c}` }));
-                filter.append(node('feColorMatrix', { in: `d${c}`, type: 'matrix', values, result: `c${c}` }));
+                filter.append(svgNode('feDisplacementMap', { in: 'blur', in2: 'map', scale: p.scale * f, xChannelSelector: 'R', yChannelSelector: 'G', result: `d${c}` }));
+                filter.append(svgNode('feColorMatrix', { in: `d${c}`, type: 'matrix', values, result: `c${c}` }));
             });
-            filter.append(node('feComposite', { in: 'cr', in2: 'cg', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rg' }));
-            filter.append(node('feComposite', { in: 'rg', in2: 'cb', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rgb' }));
-            filter.append(node('feColorMatrix', { in: 'rgb', type: 'saturate', values: 1.5 }));
+            filter.append(svgNode('feComposite', { in: 'cr', in2: 'cg', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rg' }));
+            filter.append(svgNode('feComposite', { in: 'rg', in2: 'cb', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rgb' }));
+            filter.append(svgNode('feColorMatrix', { in: 'rgb', type: 'saturate', values: 1.5 }));
             defs.append(filter);
             const value = `url(#${id})`;
             el.style.backdropFilter = value;
@@ -204,125 +245,144 @@ const liquidGlass = (() => {
         }
     };
 
-    return { init };
+    const refresh = () => {
+        if (!supported) return;
+        document.querySelectorAll('[data-lg]').forEach((el) => {
+            if (!el.lgBase) return;
+            el.lgKey = '';
+            update(el);
+        });
+    };
+
+    return { init, refresh };
 })();
 
-const clockEl = $('clock');
-const dateEl = $('date');
-const zoneEl = $('zone-chip');
-const ampmEl = $('ampm');
-const sideEl = ampmEl.parentElement;
-const colonEl = $('colon');
-const sweepEl = $('dial-sweep');
-const fillEl = $('progress-fill');
-const groups = { hours: $('hours'), minutes: $('minutes'), seconds: $('seconds') };
-const weekdays = '日一二三四五六';
-
-const formatOffset = (off) => {
-    const sign = off < 0 ? '−' : '+';
-    const abs = Math.abs(off);
-    const h = Math.floor(abs);
-    const m = Math.round((abs - h) * 60);
-    return `UTC${sign}${h}${m ? `:${pad(m)}` : ''}`;
-};
-
-const deviceOffset = () => -new Date().getTimezoneOffset() / 60;
-
-const readTime = () => {
-    const d = new Date();
-    if (state.offset === null) {
-        return {
-            y: d.getFullYear(), mo: d.getMonth() + 1, day: d.getDate(), wd: d.getDay(),
-            h: d.getHours(), m: d.getMinutes(), s: d.getSeconds(), ms: d.getMilliseconds(),
-            off: -d.getTimezoneOffset() / 60
-        };
-    }
-    const t = new Date(d.getTime() + state.offset * 3600000);
-    return {
-        y: t.getUTCFullYear(), mo: t.getUTCMonth() + 1, day: t.getUTCDate(), wd: t.getUTCDay(),
-        h: t.getUTCHours(), m: t.getUTCMinutes(), s: t.getUTCSeconds(), ms: t.getUTCMilliseconds(),
-        off: state.offset
-    };
-};
-
-const makeCell = () => {
-    const cell = document.createElement('span');
-    cell.className = 'dg';
-    const ghost = document.createElement('span');
-    ghost.className = 'dg-ghost';
-    ghost.textContent = '0';
-    cell.append(ghost);
-    return cell;
-};
-
-const setGroup = (group, text, animate) => {
-    const chars = [...text];
-    let canAnimate = animate && !reduceMotion.matches;
-    if (group.children.length !== chars.length) {
-        group.replaceChildren(...chars.map(makeCell));
-        canAnimate = false;
-    }
-    chars.forEach((ch, i) => {
-        const cell = group.children[i];
-        if (cell.dataset.v === ch) return;
-        cell.dataset.v = ch;
-        const next = document.createElement('span');
-        next.className = 'dg-val';
-        next.textContent = ch;
-        const prev = [...cell.querySelectorAll('.dg-val')];
-        if (canAnimate) {
-            next.classList.add('is-in');
-            prev.forEach((old) => {
-                old.classList.remove('is-in');
-                old.classList.add('is-out');
-                old.addEventListener('animationend', () => old.remove(), { once: true });
-                setTimeout(() => old.remove(), 900);
-            });
-        } else {
-            prev.forEach((old) => old.remove());
-        }
-        cell.append(next);
-    });
-};
-
-const render = (t, animate) => {
-    const hours = state.is24 ? pad(t.h) : String(t.h % 12 || 12);
-    setGroup(groups.hours, hours, animate);
-    setGroup(groups.minutes, pad(t.m), animate);
-    setGroup(groups.seconds, pad(t.s), animate);
-    ampmEl.textContent = state.is24 ? '' : t.h < 12 ? 'AM' : 'PM';
-    sideEl.classList.toggle('is-empty', state.is24 && !state.showSeconds);
-    dateEl.textContent = `${t.y} 年 ${t.mo} 月 ${t.day} 日 · 星期${weekdays[t.wd]}`;
-    zoneEl.textContent = formatOffset(t.off);
-    clockEl.setAttribute('aria-label', `現在時間 ${hours} 點 ${pad(t.m)} 分`);
-};
-
-let lastKey = '';
-const frame = () => {
+const buildFace = () => {
     try {
-        const t = readTime();
-        const sec = t.s + t.ms / 1000;
-        sweepEl.style.transform = `rotate(${sec * 6}deg)`;
-        fillEl.style.transform = `scaleX(${sec / 60})`;
-        colonEl.classList.toggle('is-dim', t.ms >= 500);
-        const key = `${t.h}:${t.m}:${t.s}:${state.is24}:${state.offset}:${state.showSeconds}`;
-        if (key !== lastKey) {
-            render(t, lastKey !== '');
-            lastKey = key;
+        const frag = document.createDocumentFragment();
+        frag.append(svgNode('circle', { class: 'f-ring', cx: 0, cy: 0, r: 96 }));
+        for (let i = 0; i < 60; i++) {
+            const major = i % 5 === 0;
+            const a = (i * 6 * Math.PI) / 180;
+            const sx = Math.sin(a);
+            const sy = -Math.cos(a);
+            const inner = major ? 80 : 86;
+            frag.append(svgNode('line', {
+                class: major ? 'f-major' : 'f-minor',
+                x1: (sx * inner).toFixed(2),
+                y1: (sy * inner).toFixed(2),
+                x2: (sx * 92).toFixed(2),
+                y2: (sy * 92).toFixed(2)
+            }));
         }
+        for (let n = 1; n <= 12; n++) {
+            const a = (n * 30 * Math.PI) / 180;
+            const label = svgNode('text', {
+                class: n % 3 === 0 ? 'f-num f-quarter' : 'f-num',
+                x: (Math.sin(a) * 68).toFixed(2),
+                y: (-Math.cos(a) * 68).toFixed(2)
+            });
+            label.textContent = n;
+            frag.append(label);
+        }
+        face.append(frag);
     } catch (err) {
-        console.error('時鐘更新失敗', err);
+        console.error('錶盤建立失敗', err);
     }
-    requestAnimationFrame(frame);
 };
 
-const themeMeta = document.querySelector('meta[name="theme-color"]');
-const seg = $('theme-seg');
-const segBtns = [...seg.querySelectorAll('.seg-btn')];
+const paintHands = () => {
+    try {
+        const now = getNow();
+        const ms = reduceMotion.matches ? 0 : now.getMilliseconds();
+        const s = now.getSeconds() + ms / 1000;
+        const m = now.getMinutes() + s / 60;
+        const h = (now.getHours() % 12) + m / 60;
+        hands.hour.style.setProperty('--a', `${h * 30}deg`);
+        hands.min.style.setProperty('--a', `${m * 6}deg`);
+        hands.sec.style.setProperty('--a', `${s * 6}deg`);
+        sweep.style.setProperty('--a', `${s * 6}deg`);
+    } catch (err) {
+        console.error('指針更新失敗', err);
+    }
+};
+
+let rafId = 0;
+const tick = () => {
+    paintHands();
+    rafId = requestAnimationFrame(tick);
+};
+const runClock = () => {
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+    if (state.clockStyle === 'glass') tick();
+};
+
+function updateUTCUI() {
+    utcDisplay.value = state.utcOffset === null ? '自動' : `${state.utcOffset >= 0 ? '+' : ''}${state.utcOffset}`;
+}
+
+const updateTime = () => {
+    try {
+        const now = getNow();
+        const year = now.getFullYear();
+        if (Number.isNaN(year)) throw new Error('Invalid Date');
+        const month = now.getMonth() + 1;
+        const day = now.getDate();
+        const hours = now.getHours();
+        const shown = state.is24Hour ? hours : hours % 12 || 12;
+        const suffix = state.is24Hour ? '' : hours >= 12 ? 'PM' : 'AM';
+        const text = `${pad(shown)}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        dateEl.textContent = `${year}-${pad(month)}-${pad(day)}`;
+        timeEl.textContent = text;
+        ampmEl.textContent = suffix;
+        wDate.textContent = `${month}月${day}日 星期${weekdays[now.getDay()]}`;
+        wTime.textContent = text;
+        wAmpm.textContent = suffix;
+        wZone.textContent = zoneLabel();
+    } catch (err) {
+        console.error('時間更新失敗', err);
+        store.remove('utcOffset');
+        state.utcOffset = null;
+        updateUTCUI();
+    }
+};
+
+const clockLoop = () => {
+    updateTime();
+    setTimeout(clockLoop, 1000 - (Date.now() % 1000) + 8);
+};
+
+const reveal = (commit, origin) => {
+    if (!origin || !document.startViewTransition || reduceMotion.matches) {
+        commit();
+        return;
+    }
+    try {
+        const { x, y } = origin;
+        const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+        const transition = document.startViewTransition(commit);
+        transition.ready
+            .then(() => {
+                root.animate(
+                    { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+                    { duration: 760, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', pseudoElement: '::view-transition-new(root)' }
+                );
+            })
+            .catch((err) => console.warn('轉場動畫失敗', err));
+    } catch (err) {
+        console.warn('轉場動畫失敗', err);
+        commit();
+    }
+};
+
+const syncMeta = () => {
+    const color = root.dataset.style === 'glass' ? (root.dataset.theme === 'dark' ? '#0b0d14' : '#eef1f7') : '#2c2f33';
+    themeMeta?.setAttribute('content', color);
+};
 
 const syncSeg = () => {
-    const index = themeModes.indexOf(state.themeMode);
-    seg.style.setProperty('--i', index);
+    seg.style.setProperty('--i', themeModes.indexOf(state.themeMode));
     segBtns.forEach((btn) => {
         const active = btn.dataset.mode === state.themeMode;
         btn.setAttribute('aria-checked', String(active));
@@ -333,29 +393,14 @@ const syncSeg = () => {
 const applyTheme = (origin) => {
     const resolved = state.themeMode === 'auto' ? (darkQuery.matches ? 'dark' : 'light') : state.themeMode;
     syncSeg();
-    if (root.dataset.theme === resolved) return;
-    const commit = () => {
-        root.dataset.theme = resolved;
-        themeMeta?.setAttribute('content', resolved === 'dark' ? '#0b0d14' : '#eef1f7');
-    };
-    if (!origin || !document.startViewTransition || reduceMotion.matches) {
-        commit();
+    if (root.dataset.theme === resolved) {
+        syncMeta();
         return;
     }
-    try {
-        const { x, y } = origin;
-        const radius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-        const transition = document.startViewTransition(commit);
-        transition.ready.then(() => {
-            root.animate(
-                { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
-                { duration: 760, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', pseudoElement: '::view-transition-new(root)' }
-            );
-        }).catch((err) => console.warn('主題轉場失敗', err));
-    } catch (err) {
-        console.warn('主題轉場失敗', err);
-        commit();
-    }
+    reveal(() => {
+        root.dataset.theme = resolved;
+        syncMeta();
+    }, state.clockStyle === 'glass' ? origin : null);
 };
 
 const setThemeMode = (mode, origin) => {
@@ -365,272 +410,133 @@ const setThemeMode = (mode, origin) => {
     applyTheme(origin);
 };
 
-segBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-        const r = btn.getBoundingClientRect();
-        setThemeMode(btn.dataset.mode, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
-    });
-});
-
-seg.addEventListener('keydown', (e) => {
-    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-    if (!step) return;
-    e.preventDefault();
-    const index = (themeModes.indexOf(state.themeMode) + step + themeModes.length) % themeModes.length;
-    const btn = segBtns[index];
-    btn.focus();
-    const r = btn.getBoundingClientRect();
-    setThemeMode(themeModes[index], { x: r.left + r.width / 2, y: r.top + r.height / 2 });
-});
-
-darkQuery.addEventListener('change', () => {
-    if (state.themeMode === 'auto') applyTheme({ x: innerWidth / 2, y: innerHeight / 2 });
-});
-
-const syncRangeFill = (el) => {
+const syncRange = () => {
     try {
-        const min = Number(el.min) || 0;
-        const max = Number(el.max) || 100;
-        const span = max - min || 1;
-        const t = (Number(el.value) - min) / span;
-        const width = el.getBoundingClientRect().width || el.clientWidth || 1;
+        const min = parseFloat(scaleSlider.min);
+        const max = parseFloat(scaleSlider.max);
+        const t = clamp((parseFloat(scaleSlider.value) - min) / (max - min), 0, 1);
+        const width = scaleSlider.clientWidth;
+        if (!width) return;
         const thumb = 16;
         const fillPx = thumb * 0.5 + t * Math.max(0, width - thumb);
-        const pct = Math.max(0, Math.min(100, (fillPx / width) * 100));
-        el.style.setProperty('--pct', `${pct}%`);
+        scaleSlider.style.setProperty('--pct', `${clamp((fillPx / width) * 100, 0, 100)}%`);
     } catch (err) {
-        console.error('同步拉桿填色失敗', err);
+        console.warn('滑桿更新失敗', err);
     }
 };
 
-const formatToggle = $('format-toggle');
-const formatLabel = document.querySelector('.label-text');
-const secondsToggle = $('seconds-toggle');
-const wakeToggle = $('wake-toggle');
-const wakeRow = $('wake-row');
-const slider = $('scale-slider');
-const scaleValue = $('scale-value');
-const utcDisplay = $('utc-display');
-const utcDesc = $('utc-desc');
-const utcReset = $('utc-reset');
-
-const syncSettings = () => {
-    formatToggle.checked = state.is24;
-    formatLabel.textContent = `目前：${state.is24 ? '24' : '12'} 小時制`;
-    secondsToggle.checked = state.showSeconds;
-    root.classList.toggle('no-seconds', !state.showSeconds);
-    wakeToggle.checked = state.wakeLock;
-    slider.value = String(state.scale);
-    scaleValue.textContent = `${state.scale.toFixed(2)}x`;
-    root.style.setProperty('--clock-scale', String(state.scale));
-    syncRangeFill(slider);
-    const auto = state.offset === null;
-    utcDisplay.textContent = auto ? '自動' : formatOffset(state.offset);
-    utcDesc.textContent = auto ? `跟隨裝置時區（${formatOffset(deviceOffset())}）` : '已手動指定時區';
-    utcReset.setAttribute('aria-pressed', String(auto));
+const syncStyleUI = () => {
+    choiceBtns.forEach((btn) => {
+        const active = btn.dataset.style === state.clockStyle;
+        btn.setAttribute('aria-checked', String(active));
+        btn.tabIndex = active ? 0 : -1;
+    });
+    const label = styleLabels[state.clockStyle];
+    styleBtn.setAttribute('aria-label', label);
+    styleTip.textContent = label;
 };
 
-const shiftOffset = (delta) => {
-    const base = state.offset ?? deviceOffset();
-    state.offset = clamp(Math.round((base + delta) * 4) / 4, -12, 14);
-    store.set('utcOffset', state.offset);
-    syncSettings();
+const setStyle = (style, origin) => {
+    if (!clockStyles.includes(style) || style === state.clockStyle) return;
+    state.clockStyle = style;
+    store.set('clockStyle', style);
+    syncStyleUI();
+    reveal(() => {
+        root.dataset.style = style;
+        syncMeta();
+        paintHands();
+        runClock();
+        syncRange();
+        requestAnimationFrame(() => liquidGlass.refresh());
+    }, origin);
 };
 
-$('utc-dec').addEventListener('click', () => shiftOffset(-1));
-$('utc-inc').addEventListener('click', () => shiftOffset(1));
-utcReset.addEventListener('click', () => {
-    if (state.offset === null) return;
-    state.offset = null;
-    store.set('utcOffset', null);
-    syncSettings();
-    showToast('已恢復為裝置時區');
-});
-
-formatToggle.addEventListener('change', () => {
-    state.is24 = formatToggle.checked;
-    store.set('is24Hour', state.is24);
-    syncSettings();
-});
-
-secondsToggle.addEventListener('change', () => {
-    state.showSeconds = secondsToggle.checked;
-    store.set('showSeconds', state.showSeconds);
-    syncSettings();
-});
-
-slider.addEventListener('input', () => {
-    state.scale = clamp(Number(slider.value) || 1, 0.5, 2);
-    scaleValue.textContent = `${state.scale.toFixed(2)}x`;
-    root.style.setProperty('--clock-scale', String(state.scale));
-    syncRangeFill(slider);
-});
-slider.addEventListener('change', () => store.set('clockScale', state.scale));
-slider.addEventListener('pointerdown', () => slider.classList.add('is-dragging'));
-['pointerup', 'pointercancel'].forEach((ev) => addEventListener(ev, () => slider.classList.remove('is-dragging')));
-addEventListener('resize', () => syncRangeFill(slider));
-
-let wakeSentinel = null;
-const wakeSupported = 'wakeLock' in navigator;
-
-const acquireWake = async (silent = false) => {
-    if (!wakeSupported || !state.wakeLock || wakeSentinel || document.visibilityState !== 'visible') return;
-    try {
-        wakeSentinel = await navigator.wakeLock.request('screen');
-        wakeSentinel.addEventListener('release', () => {
-            wakeSentinel = null;
+const bindRadios = (buttons, key, onPick) => {
+    buttons.forEach((btn, i) => {
+        btn.addEventListener('click', () => onPick(btn.dataset[key], centerOf(btn)));
+        btn.addEventListener('keydown', (e) => {
+            const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+            if (!step) return;
+            e.preventDefault();
+            const next = buttons[(i + step + buttons.length) % buttons.length];
+            next.focus();
+            onPick(next.dataset[key], centerOf(next));
         });
-    } catch (err) {
-        console.warn('螢幕常亮失敗', err);
-        if (silent) return;
-        state.wakeLock = false;
-        store.set('wakeLock', false);
-        wakeToggle.checked = false;
-        showToast('無法保持螢幕常亮，請確認瀏覽器權限或電量模式');
-    }
-};
-
-const releaseWake = async () => {
-    try {
-        await wakeSentinel?.release();
-    } catch (err) {
-        console.warn('釋放螢幕常亮失敗', err);
-    }
-    wakeSentinel = null;
-};
-
-if (!wakeSupported) wakeRow.hidden = true;
-
-wakeToggle.addEventListener('change', async () => {
-    state.wakeLock = wakeToggle.checked;
-    store.set('wakeLock', state.wakeLock);
-    if (state.wakeLock) {
-        await acquireWake();
-        if (state.wakeLock) showToast('螢幕將保持常亮');
-    } else {
-        await releaseWake();
-    }
-});
-
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') acquireWake(true);
-});
-
-const fsWrap = $('fs-wrap');
-const fsBtn = $('fs-btn');
-const fsTip = $('fs-tip');
-
-if (!document.fullscreenEnabled) fsWrap.style.display = 'none';
-
-fsBtn.addEventListener('click', async () => {
-    try {
-        if (document.fullscreenElement) await document.exitFullscreen();
-        else await root.requestFullscreen({ navigationUI: 'hide' });
-    } catch (err) {
-        console.warn('切換全螢幕失敗', err);
-        showToast('目前無法切換全螢幕');
-    }
-});
-
-document.addEventListener('fullscreenchange', () => {
-    const on = Boolean(document.fullscreenElement);
-    root.classList.toggle('is-fullscreen', on);
-    fsTip.textContent = on ? '離開全螢幕' : '全螢幕';
-    fsBtn.setAttribute('aria-label', fsTip.textContent);
-});
-
-const overlay = $('settings-modal');
-const settingsBtn = $('settings-btn');
-const closeBtn = $('modal-close-btn');
-
-const openModal = () => {
-    overlay.classList.add('active');
-    overlay.setAttribute('aria-hidden', 'false');
-    syncSettings();
-    requestAnimationFrame(() => {
-        syncRangeFill(slider);
-        closeBtn.focus({ preventScroll: true });
     });
 };
 
-const closeModal = () => {
-    if (!overlay.classList.contains('active')) return;
-    overlay.classList.remove('active');
-    overlay.setAttribute('aria-hidden', 'true');
-    settingsBtn.focus({ preventScroll: true });
+const stepUTC = (delta) => {
+    const base = state.utcOffset ?? Math.round(localOffset());
+    state.utcOffset = clamp(base + delta, -12, 14);
+    store.set('utcOffset', state.utcOffset);
+    updateUTCUI();
+    updateTime();
+    paintHands();
 };
 
+const updateLabel = () => {
+    labelText.textContent = state.is24Hour ? '24小時制' : '12小時制';
+};
+
+const applyScale = (val) => {
+    const scale = clamp(Number.isFinite(val) ? val : 1, 0.5, 2);
+    state.clockScale = scale;
+    scaleSlider.value = scale;
+    scaleValue.textContent = `${scale.toFixed(1)}x`;
+    root.style.setProperty('--clock-scale', scale);
+    store.set('clockScale', scale);
+    syncRange();
+};
+
+const openModal = () => {
+    settingsModal.classList.add('active');
+    requestAnimationFrame(syncRange);
+};
+const closeModal = () => settingsModal.classList.remove('active');
+
 settingsBtn.addEventListener('click', openModal);
-closeBtn.addEventListener('click', closeModal);
-overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) closeModal();
+modalCloseBtn.addEventListener('click', closeModal);
+settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeModal();
 });
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
 });
 
-const dock = $('dock');
-let idleTimer = 0;
-const goIdle = () => {
-    if (overlay.classList.contains('active') || dock.matches(':hover, :focus-within')) {
-        idleTimer = setTimeout(goIdle, 3500);
-        return;
-    }
-    document.body.classList.add('is-idle');
-};
-const wakeUi = () => {
-    document.body.classList.remove('is-idle');
-    clearTimeout(idleTimer);
-    idleTimer = setTimeout(goIdle, 3500);
-};
-['pointermove', 'pointerdown', 'keydown', 'wheel', 'touchstart'].forEach((ev) => addEventListener(ev, wakeUi, { passive: true }));
+formatToggle.addEventListener('change', (e) => {
+    state.is24Hour = e.target.checked;
+    store.set('is24Hour', state.is24Hour);
+    updateTime();
+    updateLabel();
+});
 
-const glassEls = [...document.querySelectorAll('.glass')];
-let pointer = null;
-let pointerQueued = false;
-addEventListener('pointermove', (e) => {
-    pointer = e;
-    if (pointerQueued) return;
-    pointerQueued = true;
-    requestAnimationFrame(() => {
-        pointerQueued = false;
+utcDec.addEventListener('click', () => stepUTC(-1));
+utcInc.addEventListener('click', () => stepUTC(1));
+scaleSlider.addEventListener('input', (e) => applyScale(parseFloat(e.target.value)));
+window.addEventListener('resize', syncRange);
+
+bindRadios(segBtns, 'mode', setThemeMode);
+bindRadios(choiceBtns, 'style', setStyle);
+styleBtn.addEventListener('click', () => setStyle(state.clockStyle === 'glass' ? 'classic' : 'glass', centerOf(styleBtn)));
+
+darkQuery.addEventListener('change', () => {
+    if (state.themeMode === 'auto') applyTheme({ x: innerWidth / 2, y: innerHeight / 2 });
+});
+reduceMotion.addEventListener('change', runClock);
+
+let pointerFrame = 0;
+document.addEventListener('pointermove', (e) => {
+    if (state.clockStyle !== 'glass' || pointerFrame) return;
+    pointerFrame = requestAnimationFrame(() => {
+        pointerFrame = 0;
         glassEls.forEach((el) => {
             const r = el.getBoundingClientRect();
-            el.style.setProperty('--mx', `${pointer.clientX - r.left}px`);
-            el.style.setProperty('--my', `${pointer.clientY - r.top}px`);
+            if (!r.width) return;
+            el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+            el.style.setProperty('--my', `${e.clientY - r.top}px`);
         });
     });
 }, { passive: true });
-root.addEventListener('mouseleave', () => {
-    glassEls.forEach((el) => {
-        el.style.setProperty('--mx', '-9999px');
-        el.style.setProperty('--my', '-9999px');
-    });
-});
-
-try {
-    syncSettings();
-    const segThumb = seg.querySelector('.seg-thumb');
-    segThumb.style.transition = 'none';
-    applyTheme(null);
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-        segThumb.style.transition = '';
-    }));
-    liquidGlass.init();
-    requestAnimationFrame(frame);
-    wakeUi();
-    acquireWake(true);
-    document.fonts?.ready.then(() => syncRangeFill(slider)).catch(() => { });
-} catch (err) {
-    console.error('初始化失敗', err);
-    showToast('時鐘初始化失敗，請重新整理頁面');
-}
-
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service Worker 註冊失敗', err));
-    });
-}
 
 const footer = document.getElementById('aki-footer');
 if (footer) {
@@ -666,4 +572,31 @@ if (footer) {
             }
         });
     });
+}
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch((err) => console.warn('Service Worker 註冊失敗', err));
+    });
+}
+
+try {
+    root.dataset.style = state.clockStyle;
+    formatToggle.checked = state.is24Hour;
+    updateLabel();
+    updateUTCUI();
+    applyScale(state.clockScale);
+    syncStyleUI();
+    buildFace();
+    segThumb.style.transition = 'none';
+    applyTheme(null);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        segThumb.style.transition = '';
+    }));
+    clockLoop();
+    paintHands();
+    runClock();
+    liquidGlass.init();
+} catch (err) {
+    console.error('時鐘初始化失敗', err);
 }

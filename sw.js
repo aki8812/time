@@ -1,4 +1,4 @@
-const CACHE_NAME = 'simple-time-v3';
+const CACHE_NAME = 'simple-time-v4';
 const ASSETS = [
     './',
     './index.html',
