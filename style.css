@@ -505,8 +505,8 @@ html[data-style="glass"][data-theme="dark"] {
     --overlay: rgba(4, 5, 10, .45);
     --accent: #0a84ff;
     --sec: #ff6a2b;
-    --facet-a: #ffffff;
-    --facet-b: #a9aebb;
+    --hand: linear-gradient(90deg, #d9dcea, #ffffff 45%, #eceef7 70%, #c9cddd);
+    --hand-edge: rgba(255, 255, 255, .55);
     --hand-shadow: rgba(0, 0, 0, .55);
     --cap: #f6f7fb;
     --tip-bg: rgba(18, 20, 30, .92);
@@ -554,8 +554,8 @@ html[data-style="glass"][data-theme="light"] {
     --overlay: rgba(220, 224, 240, .35);
     --accent: #0a6cff;
     --sec: #e8590c;
-    --facet-a: #4a5064;
-    --facet-b: #12151e;
+    --hand: linear-gradient(90deg, #2a3045, #121624 50%, #222839);
+    --hand-edge: rgba(255, 255, 255, .18);
     --hand-shadow: rgba(30, 34, 46, .3);
     --cap: #121624;
     --tip-bg: rgba(255, 255, 255, .96);
@@ -959,6 +959,7 @@ html[data-style="classic"] #digital-item {
     width: var(--w);
     height: var(--l);
     margin-left: calc(var(--w) / -2);
+    border-radius: 999px;
     transform-origin: 50% 100%;
     transform: rotate(var(--a, 0deg));
     will-change: transform;
@@ -966,27 +967,26 @@ html[data-style="classic"] #digital-item {
 
 .h-hour,
 .h-min {
-    background: linear-gradient(90deg, var(--facet-a) 50%, var(--facet-b) 50%);
-    clip-path: polygon(50% 0, 100% 78%, 64% 100%, 36% 100%, 0 78%);
+    background: var(--hand);
+    box-shadow: inset 0 0 0 1px var(--hand-edge);
 }
 
 .h-hour {
-    --w: calc(var(--d) * .052);
+    --w: calc(var(--d) * .024);
     --l: calc(var(--d) * .25);
 }
 
 .h-min {
-    --w: calc(var(--d) * .04);
-    --l: calc(var(--d) * .39);
+    --w: calc(var(--d) * .016);
+    --l: calc(var(--d) * .385);
 }
 
 .h-sec {
-    --w: max(1.4px, calc(var(--d) * .004));
+    --w: max(1.3px, calc(var(--d) * .0038));
     --tail: calc(var(--d) * .085);
     --l: calc(var(--d) * .415 + var(--tail));
     bottom: calc(50% - var(--tail));
     transform-origin: 50% calc(100% - var(--tail));
-    border-radius: 999px;
     background: var(--sec);
 }
 
@@ -994,10 +994,10 @@ html[data-style="classic"] #digital-item {
     content: "";
     position: absolute;
     left: 50%;
-    bottom: 0;
-    width: calc(var(--d) * .012);
-    height: calc(var(--tail) * .62);
-    border-radius: 999px;
+    bottom: calc(var(--d) * .012);
+    width: calc(var(--d) * .02);
+    height: calc(var(--d) * .02);
+    border-radius: 50%;
     background: var(--sec);
     transform: translateX(-50%);
 }
@@ -1006,20 +1006,12 @@ html[data-style="classic"] #digital-item {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: calc(var(--d) * .026);
-    height: calc(var(--d) * .026);
+    width: calc(var(--d) * .036);
+    height: calc(var(--d) * .036);
     border-radius: 50%;
-    background: var(--sec);
-    box-shadow: 0 0 0 calc(var(--d) * .006) var(--cap);
+    background: var(--cap);
+    border: calc(var(--d) * .006) solid var(--sec);
     transform: translate(-50%, -50%);
-}
-
-.w-cap::after {
-    content: "";
-    position: absolute;
-    inset: 32%;
-    border-radius: 50%;
-    background: var(--bg);
 }
 
 html[data-style="glass"] .modal-overlay {
