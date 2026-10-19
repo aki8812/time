@@ -505,8 +505,9 @@ html[data-style="glass"][data-theme="dark"] {
     --overlay: rgba(4, 5, 10, .45);
     --accent: #0a84ff;
     --sec: #ff6a2b;
-    --hand: linear-gradient(90deg, #d9dcea, #ffffff 45%, #eceef7 70%, #c9cddd);
-    --hand-edge: rgba(255, 255, 255, .55);
+    --hand: linear-gradient(90deg, #cfd2dc, #ffffff 42%, #f1f2f6 62%, #c4c8d4);
+    --hand-edge: rgba(255, 255, 255, .5);
+    --hand-glint: rgba(255, 255, 255, .7);
     --hand-shadow: rgba(0, 0, 0, .55);
     --cap: #f6f7fb;
     --tip-bg: rgba(18, 20, 30, .92);
@@ -554,8 +555,9 @@ html[data-style="glass"][data-theme="light"] {
     --overlay: rgba(220, 224, 240, .35);
     --accent: #0a6cff;
     --sec: #e8590c;
-    --hand: linear-gradient(90deg, #2a3045, #121624 50%, #222839);
-    --hand-edge: rgba(255, 255, 255, .18);
+    --hand: linear-gradient(90deg, #343a4c, #161a26 48%, #10131c 62%, #2a2f3f);
+    --hand-edge: rgba(255, 255, 255, .14);
+    --hand-glint: rgba(255, 255, 255, .22);
     --hand-shadow: rgba(30, 34, 46, .3);
     --cap: #121624;
     --tip-bg: rgba(255, 255, 255, .96);
@@ -792,7 +794,7 @@ html[data-style="glass"] .watch {
 }
 
 .w-ring {
-    --in: 80%;
+    --in: 90%;
     --ring-mask: radial-gradient(closest-side, transparent calc(var(--in) - .5px), #000 var(--in));
     position: absolute;
     inset: 0;
@@ -817,23 +819,23 @@ html[data-style="glass"] .watch {
     background:
         radial-gradient(closest-side,
             transparent var(--in),
-            var(--ring-shade) calc(var(--in) + .6%),
-            var(--ring-body) calc(var(--in) + 3.5%),
-            transparent calc(var(--in) + 8%),
-            transparent calc(var(--in) + 12%),
-            var(--ring-body) 96.5%,
-            var(--ring-shade) 99.4%,
+            var(--ring-shade) calc(var(--in) + .4%),
+            var(--ring-body) calc(var(--in) + 2%),
+            transparent calc(var(--in) + 4.5%),
+            transparent 95%,
+            var(--ring-body) 97.8%,
+            var(--ring-shade) 99.5%,
             transparent 100%),
-        radial-gradient(circle at 22% 15%, var(--ring-body), transparent 18%),
-        radial-gradient(circle at 80% 87%, var(--ring-body), transparent 14%);
+        radial-gradient(circle at 20% 13%, var(--ring-body), transparent 12%),
+        radial-gradient(circle at 82% 89%, var(--ring-body), transparent 9%);
 }
 
 .w-ring::after {
     --rims: radial-gradient(closest-side,
             transparent var(--in),
             #000 calc(var(--in) + .2%),
-            transparent calc(var(--in) + 1.4%),
-            transparent 98%,
+            transparent calc(var(--in) + 1.1%),
+            transparent 98.4%,
             #000 99.6%,
             transparent 100%);
     background: conic-gradient(from 300deg,
@@ -850,7 +852,7 @@ html[data-style="glass"] .watch {
 
 .w-dial {
     position: absolute;
-    inset: 10%;
+    inset: 5%;
     border-radius: 50%;
     background: var(--dial);
     backdrop-filter: blur(26px) saturate(150%);
@@ -859,17 +861,17 @@ html[data-style="glass"] .watch {
         inset 0 1px 0 var(--dial-edge),
         inset 0 0 0 1px color-mix(in srgb, var(--dial-edge) 45%, transparent),
         inset 0 calc(var(--d) * .012) calc(var(--d) * .035) calc(var(--d) * -.01) var(--dial-shade),
-        0 calc(var(--d) * .006) calc(var(--d) * .02) var(--dial-shade);
+        0 calc(var(--d) * .005) calc(var(--d) * .016) var(--dial-shade);
     pointer-events: none;
 }
 
 .w-sweep {
     position: absolute;
-    inset: 10%;
+    inset: 5%;
     border-radius: 50%;
     background: conic-gradient(from 0deg, transparent 0deg 300deg, var(--sweep) 360deg);
-    mask: radial-gradient(closest-side, transparent 72%, #000 86%, #000 98%, transparent 100%);
-    -webkit-mask: radial-gradient(closest-side, transparent 72%, #000 86%, #000 98%, transparent 100%);
+    mask: radial-gradient(closest-side, transparent 74%, #000 86%, #000 98%, transparent 100%);
+    -webkit-mask: radial-gradient(closest-side, transparent 74%, #000 86%, #000 98%, transparent 100%);
     transform: rotate(var(--a, 0deg));
     opacity: .55;
     pointer-events: none;
@@ -899,7 +901,7 @@ html[data-style="glass"] .watch {
 .f-num {
     fill: var(--ink);
     font-family: "Inter", sans-serif;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 300;
     text-anchor: middle;
     dominant-baseline: central;
@@ -907,7 +909,7 @@ html[data-style="glass"] .watch {
 }
 
 .f-quarter {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 400;
 }
 
@@ -915,27 +917,10 @@ html[data-style="glass"] .watch {
     position: absolute;
     left: 0;
     right: 0;
+    top: 64%;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: calc(var(--d) * .014);
+    justify-content: center;
     pointer-events: none;
-}
-
-.w-top {
-    top: 31%;
-}
-
-.w-bottom {
-    top: 58.5%;
-}
-
-.w-date {
-    font-family: var(--font-zh);
-    font-size: calc(var(--d) * .03);
-    font-weight: 500;
-    letter-spacing: .08em;
-    color: var(--ink-soft);
 }
 
 .w-digital {
@@ -943,36 +928,25 @@ html[data-style="glass"] .watch {
     align-items: baseline;
     gap: .3em;
     font-family: var(--font-mono);
-    font-size: calc(var(--d) * .048);
+    font-size: calc(var(--d) * .044);
     font-weight: 400;
     letter-spacing: .02em;
-    color: var(--ink);
+    color: var(--ink-soft);
     font-variant-numeric: tabular-nums;
 }
 
 .w-ampm {
-    font-size: .48em;
+    font-size: .5em;
     font-weight: 500;
     letter-spacing: .08em;
-    color: var(--ink-soft);
-}
-
-.w-zone {
-    padding: .35em 1em;
-    border-radius: 999px;
-    background: var(--ctrl);
-    box-shadow: inset 0 0 0 1px var(--ctrl-line);
-    font-family: var(--font-mono);
-    font-size: calc(var(--d) * .022);
-    letter-spacing: .06em;
-    color: var(--ink-soft);
+    color: var(--ink-faint);
 }
 
 .w-hands {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    filter: drop-shadow(0 calc(var(--d) * .008) calc(var(--d) * .01) var(--hand-shadow));
+    filter: drop-shadow(0 calc(var(--d) * .006) calc(var(--d) * .008) var(--hand-shadow));
 }
 
 .hand {
@@ -982,7 +956,6 @@ html[data-style="glass"] .watch {
     width: var(--w);
     height: var(--l);
     margin-left: calc(var(--w) / -2);
-    border-radius: 999px;
     transform-origin: 50% 100%;
     transform: rotate(var(--a, 0deg));
     will-change: transform;
@@ -990,26 +963,54 @@ html[data-style="glass"] .watch {
 
 .h-hour,
 .h-min {
+    --stem: calc(var(--d) * .06);
+}
+
+.h-hour::before,
+.h-min::before,
+.h-hour::after,
+.h-min::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 999px;
+}
+
+.h-hour::before,
+.h-min::before {
+    bottom: 0;
+    width: max(2px, calc(var(--d) * .008));
+    height: calc(var(--stem) + var(--w));
+    background: var(--cap);
+}
+
+.h-hour::after,
+.h-min::after {
+    top: 0;
+    bottom: var(--stem);
+    width: 100%;
     background: var(--hand);
-    box-shadow: inset 0 0 0 1px var(--hand-edge);
+    box-shadow: inset 0 0 0 1px var(--hand-edge), inset 0 calc(var(--d) * .004) 0 var(--hand-glint);
 }
 
 .h-hour {
     --w: calc(var(--d) * .03);
-    --l: calc(var(--d) * .22);
+    --l: calc(var(--d) * .25);
 }
 
 .h-min {
-    --w: calc(var(--d) * .02);
-    --l: calc(var(--d) * .325);
+    --w: calc(var(--d) * .022);
+    --l: calc(var(--d) * .385);
 }
 
 .h-sec {
-    --w: max(1.6px, calc(var(--d) * .005));
-    --tail: calc(var(--d) * .08);
-    --l: calc(var(--d) * .36 + var(--tail));
+    --w: max(1.4px, calc(var(--d) * .004));
+    --tail: calc(var(--d) * .085);
+    --l: calc(var(--d) * .415 + var(--tail));
     bottom: calc(50% - var(--tail));
     transform-origin: 50% calc(100% - var(--tail));
+    border-radius: 999px;
     background: var(--sec);
 }
 
@@ -1017,10 +1018,10 @@ html[data-style="glass"] .watch {
     content: "";
     position: absolute;
     left: 50%;
-    bottom: calc(var(--d) * .012);
-    width: calc(var(--d) * .024);
-    height: calc(var(--d) * .024);
-    border-radius: 50%;
+    bottom: 0;
+    width: calc(var(--d) * .012);
+    height: calc(var(--tail) * .62);
+    border-radius: 999px;
     background: var(--sec);
     transform: translateX(-50%);
 }
@@ -1029,12 +1030,20 @@ html[data-style="glass"] .watch {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: calc(var(--d) * .042);
-    height: calc(var(--d) * .042);
+    width: calc(var(--d) * .026);
+    height: calc(var(--d) * .026);
     border-radius: 50%;
-    background: var(--cap);
-    border: calc(var(--d) * .007) solid var(--sec);
+    background: var(--sec);
+    box-shadow: 0 0 0 calc(var(--d) * .006) var(--cap);
     transform: translate(-50%, -50%);
+}
+
+.w-cap::after {
+    content: "";
+    position: absolute;
+    inset: 32%;
+    border-radius: 50%;
+    background: var(--bg);
 }
 
 html[data-style="glass"] .modal-overlay {

@@ -64,17 +64,14 @@ const styleTip = $('style-tip');
 const choiceBtns = [...document.querySelectorAll('#style-choice .choice-btn')];
 const face = $('w-face');
 const sweep = $('w-sweep');
-const wDate = $('w-date');
 const wTime = $('w-time');
 const wAmpm = $('w-ampm');
-const wZone = $('w-zone');
 const hands = { hour: $('h-hour'), min: $('h-min'), sec: $('h-sec') };
 const glassEls = [...document.querySelectorAll('.glass')];
 
 const themeModes = ['light', 'auto', 'dark'];
 const clockStyles = ['classic', 'glass'];
 const styleLabels = { classic: '切換成指針時鐘', glass: '切換成經典數字時鐘' };
-const weekdays = '日一二三四五六';
 
 const parseOffset = (value) => {
     const num = parseInt(value, 10);
@@ -102,14 +99,6 @@ const getNow = () => {
     return new Date(now.getTime() + now.getTimezoneOffset() * 60000 + 3600000 * state.utcOffset);
 };
 
-const zoneLabel = () => {
-    const offset = state.utcOffset ?? localOffset();
-    const abs = Math.abs(offset);
-    const h = Math.floor(abs);
-    const m = Math.round((abs - h) * 60);
-    return `UTC${offset < 0 ? '-' : '+'}${h}${m ? `:${pad(m)}` : ''}`;
-};
-
 const centerOf = (el) => {
     const r = el.getBoundingClientRect();
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
@@ -121,7 +110,7 @@ const liquidGlass = (() => {
         panel: { scale: 74, blur: 2.4, bezel: 0.24 },
         pill: { scale: 36, blur: 1.2, bezel: 0.5 },
         sheet: { scale: 60, blur: 7, bezel: 0.2 },
-        ring: { scale: 0.085, blur: 0.5, inner: 0.8, sat: 1.15 }
+        ring: { scale: 0.05, blur: 0.4, inner: 0.9, sat: 1.15 }
     };
     const channels = [
         ['r', 1, '1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'],
@@ -304,21 +293,21 @@ const buildFace = () => {
             const a = (i * 6 * Math.PI) / 180;
             const sx = Math.sin(a);
             const sy = -Math.cos(a);
-            const inner = major ? 66 : 71;
+            const inner = major ? 76 : 81;
             frag.append(svgNode('line', {
                 class: major ? 'f-major' : 'f-minor',
                 x1: (sx * inner).toFixed(2),
                 y1: (sy * inner).toFixed(2),
-                x2: (sx * 75.5).toFixed(2),
-                y2: (sy * 75.5).toFixed(2)
+                x2: (sx * 85.5).toFixed(2),
+                y2: (sy * 85.5).toFixed(2)
             }));
         }
         for (let n = 1; n <= 12; n++) {
             const a = (n * 30 * Math.PI) / 180;
             const label = svgNode('text', {
                 class: n % 3 === 0 ? 'f-num f-quarter' : 'f-num',
-                x: (Math.sin(a) * 56).toFixed(2),
-                y: (-Math.cos(a) * 56).toFixed(2)
+                x: (Math.sin(a) * 65).toFixed(2),
+                y: (-Math.cos(a) * 65).toFixed(2)
             });
             label.textContent = n;
             frag.append(label);
@@ -374,10 +363,8 @@ const updateTime = () => {
         dateEl.textContent = `${year}-${pad(month)}-${pad(day)}`;
         timeEl.textContent = text;
         ampmEl.textContent = suffix;
-        wDate.textContent = `${month}月${day}日 星期${weekdays[now.getDay()]}`;
         wTime.textContent = text;
         wAmpm.textContent = suffix;
-        wZone.textContent = zoneLabel();
     } catch (err) {
         console.error('時間更新失敗', err);
         store.remove('utcOffset');
