@@ -47,6 +47,8 @@ const ampmEl = $('ampm');
 const dateEl = $('date');
 const formatToggle = $('format-toggle');
 const labelText = document.querySelector('.label-text');
+const digitalToggle = $('digital-toggle');
+const digitalText = $('digital-text');
 const utcDisplay = $('utc-display');
 const utcDec = $('utc-dec');
 const utcInc = $('utc-inc');
@@ -87,6 +89,7 @@ const state = {
     themeMode: pick('themeMode', themeModes, 'auto'),
     clockStyle: pick('clockStyle', clockStyles, 'classic'),
     is24Hour: store.get('is24Hour', true) !== false,
+    showDigital: store.get('showDigital', true) !== false,
     utcOffset: parseOffset(store.get('utcOffset', null)),
     clockScale: parseFloat(store.get('clockScale', 1)) || 1
 };
@@ -503,6 +506,13 @@ const updateLabel = () => {
     labelText.textContent = state.is24Hour ? '24小時制' : '12小時制';
 };
 
+const applyDigital = () => {
+    digitalToggle.checked = state.showDigital;
+    digitalText.textContent = state.showDigital ? '顯示' : '隱藏';
+    if (state.showDigital) delete root.dataset.digital;
+    else root.dataset.digital = 'off';
+};
+
 const applyScale = (val) => {
     const scale = clamp(Number.isFinite(val) ? val : 1, 0.5, 2);
     state.clockScale = scale;
@@ -533,6 +543,12 @@ formatToggle.addEventListener('change', (e) => {
     store.set('is24Hour', state.is24Hour);
     updateTime();
     updateLabel();
+});
+
+digitalToggle.addEventListener('change', (e) => {
+    state.showDigital = e.target.checked;
+    store.set('showDigital', state.showDigital);
+    applyDigital();
 });
 
 utcDec.addEventListener('click', () => stepUTC(-1));
@@ -639,6 +655,7 @@ try {
     root.dataset.style = state.clockStyle;
     formatToggle.checked = state.is24Hour;
     updateLabel();
+    applyDigital();
     updateUTCUI();
     applyScale(state.clockScale);
     syncStyleUI();

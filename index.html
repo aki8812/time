@@ -21,6 +21,7 @@
             const m = localStorage.getItem('themeMode');
             const r = document.documentElement;
             if (s === 'glass') r.dataset.style = 'glass';
+            if (localStorage.getItem('showDigital') === 'false') r.dataset.digital = 'off';
             const dark = matchMedia('(prefers-color-scheme: dark)').matches;
             r.dataset.theme = m === 'light' || m === 'dark' ? m : (dark ? 'dark' : 'light');
         } catch { }
@@ -157,6 +158,15 @@
                         <input type="checkbox" id="format-toggle">
                         <span class="slider"></span>
                         <span class="label-text">24小時制</span>
+                    </label>
+                </div>
+
+                <div class="setting-item" id="digital-item">
+                    <label>錶面數字時間</label>
+                    <label class="switch-label">
+                        <input type="checkbox" id="digital-toggle">
+                        <span class="slider"></span>
+                        <span class="label-text" id="digital-text">顯示</span>
                     </label>
                 </div>
 

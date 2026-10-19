@@ -505,9 +505,8 @@ html[data-style="glass"][data-theme="dark"] {
     --overlay: rgba(4, 5, 10, .45);
     --accent: #0a84ff;
     --sec: #ff6a2b;
-    --hand: linear-gradient(90deg, #cfd2dc, #ffffff 42%, #f1f2f6 62%, #c4c8d4);
-    --hand-edge: rgba(255, 255, 255, .5);
-    --hand-glint: rgba(255, 255, 255, .7);
+    --facet-a: #ffffff;
+    --facet-b: #a9aebb;
     --hand-shadow: rgba(0, 0, 0, .55);
     --cap: #f6f7fb;
     --tip-bg: rgba(18, 20, 30, .92);
@@ -555,9 +554,8 @@ html[data-style="glass"][data-theme="light"] {
     --overlay: rgba(220, 224, 240, .35);
     --accent: #0a6cff;
     --sec: #e8590c;
-    --hand: linear-gradient(90deg, #343a4c, #161a26 48%, #10131c 62%, #2a2f3f);
-    --hand-edge: rgba(255, 255, 255, .14);
-    --hand-glint: rgba(255, 255, 255, .22);
+    --facet-a: #4a5064;
+    --facet-b: #12151e;
     --hand-shadow: rgba(30, 34, 46, .3);
     --cap: #121624;
     --tip-bg: rgba(255, 255, 255, .96);
@@ -913,6 +911,11 @@ html[data-style="glass"] .watch {
     font-weight: 400;
 }
 
+html[data-digital="off"] .w-info,
+html[data-style="classic"] #digital-item {
+    display: none;
+}
+
 .w-info {
     position: absolute;
     left: 0;
@@ -963,45 +966,18 @@ html[data-style="glass"] .watch {
 
 .h-hour,
 .h-min {
-    --stem: calc(var(--d) * .06);
-}
-
-.h-hour::before,
-.h-min::before,
-.h-hour::after,
-.h-min::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 999px;
-}
-
-.h-hour::before,
-.h-min::before {
-    bottom: 0;
-    width: max(2px, calc(var(--d) * .008));
-    height: calc(var(--stem) + var(--w));
-    background: var(--cap);
-}
-
-.h-hour::after,
-.h-min::after {
-    top: 0;
-    bottom: var(--stem);
-    width: 100%;
-    background: var(--hand);
-    box-shadow: inset 0 0 0 1px var(--hand-edge), inset 0 calc(var(--d) * .004) 0 var(--hand-glint);
+    background: linear-gradient(90deg, var(--facet-a) 50%, var(--facet-b) 50%);
+    clip-path: polygon(50% 0, 100% 78%, 64% 100%, 36% 100%, 0 78%);
 }
 
 .h-hour {
-    --w: calc(var(--d) * .03);
+    --w: calc(var(--d) * .052);
     --l: calc(var(--d) * .25);
 }
 
 .h-min {
-    --w: calc(var(--d) * .022);
-    --l: calc(var(--d) * .385);
+    --w: calc(var(--d) * .04);
+    --l: calc(var(--d) * .39);
 }
 
 .h-sec {
