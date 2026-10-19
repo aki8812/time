@@ -73,7 +73,7 @@ const glassEls = [...document.querySelectorAll('.glass')];
 
 const themeModes = ['light', 'auto', 'dark'];
 const clockStyles = ['classic', 'glass'];
-const styleLabels = { classic: '切換成液態玻璃時鐘', glass: '切換成經典數字時鐘' };
+const styleLabels = { classic: '切換成指針時鐘', glass: '切換成經典數字時鐘' };
 const weekdays = '日一二三四五六';
 
 const parseOffset = (value) => {
@@ -121,7 +121,7 @@ const liquidGlass = (() => {
         panel: { scale: 74, blur: 2.4, bezel: 0.24 },
         pill: { scale: 36, blur: 1.2, bezel: 0.5 },
         sheet: { scale: 60, blur: 7, bezel: 0.2 },
-        dial: { scale: 90, blur: 1.6, bezel: 0.16 }
+        ring: { scale: 0.085, blur: 0.5, inner: 0.8, sat: 1.15 }
     };
     const channels = [
         ['r', 1, '1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'],
@@ -186,6 +186,44 @@ const liquidGlass = (() => {
         return canvas.toDataURL();
     };
 
+    const buildRingMap = (size, inner) => {
+        const k = size * size > 140000 ? 0.5 : 1;
+        const cs = Math.max(2, Math.round(size * k));
+        const canvas = document.createElement('canvas');
+        canvas.width = cs;
+        canvas.height = cs;
+        const ctx = canvas.getContext('2d');
+        const img = ctx.createImageData(cs, cs);
+        const data = img.data;
+        const ro = size / 2;
+        const ri = ro * inner;
+        const rm = (ro + ri) / 2;
+        const hb = (ro - ri) / 2;
+        for (let y = 0; y < cs; y++) {
+            const py = (y + 0.5) / k - ro;
+            for (let x = 0; x < cs; x++) {
+                const px = (x + 0.5) / k - ro;
+                const r = Math.hypot(px, py) || 1;
+                const u = (r - rm) / hb;
+                let ox = 0;
+                let oy = 0;
+                if (Math.abs(u) <= 1) {
+                    const e = clamp((Math.abs(u) - 0.18) / 0.82, 0, 1);
+                    const m = Math.sign(u) * e * e;
+                    ox = (-m * px) / r;
+                    oy = (-m * py) / r;
+                }
+                const i = (y * cs + x) * 4;
+                data[i] = 128 + ox * 127;
+                data[i + 1] = 128 + oy * 127;
+                data[i + 2] = 128;
+                data[i + 3] = 255;
+            }
+        }
+        ctx.putImageData(img, 0, 0);
+        return canvas.toDataURL();
+    };
+
     const update = (el) => {
         try {
             const w = el.offsetWidth;
@@ -198,17 +236,18 @@ const liquidGlass = (() => {
             el.lgKey = key;
             el.lgVer = (el.lgVer ?? 0) + 1;
             const id = `${el.lgBase}-${el.lgVer}`;
-            const bezel = clamp(Math.min(w, h) * p.bezel, 10, 64);
+            const map = p.inner ? buildRingMap(w, p.inner) : buildMap(w, h, r, clamp(Math.min(w, h) * p.bezel, 10, 64));
+            const scale = p.inner ? w * p.scale : p.scale;
             const filter = svgNode('filter', { id, x: 0, y: 0, width: w, height: h, filterUnits: 'userSpaceOnUse', 'color-interpolation-filters': 'sRGB' });
             filter.append(svgNode('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: p.blur, result: 'blur' }));
-            filter.append(svgNode('feImage', { href: buildMap(w, h, r, bezel), x: 0, y: 0, width: w, height: h, preserveAspectRatio: 'none', result: 'map' }));
+            filter.append(svgNode('feImage', { href: map, x: 0, y: 0, width: w, height: h, preserveAspectRatio: 'none', result: 'map' }));
             channels.forEach(([c, f, values]) => {
-                filter.append(svgNode('feDisplacementMap', { in: 'blur', in2: 'map', scale: p.scale * f, xChannelSelector: 'R', yChannelSelector: 'G', result: `d${c}` }));
+                filter.append(svgNode('feDisplacementMap', { in: 'blur', in2: 'map', scale: scale * f, xChannelSelector: 'R', yChannelSelector: 'G', result: `d${c}` }));
                 filter.append(svgNode('feColorMatrix', { in: `d${c}`, type: 'matrix', values, result: `c${c}` }));
             });
             filter.append(svgNode('feComposite', { in: 'cr', in2: 'cg', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rg' }));
             filter.append(svgNode('feComposite', { in: 'rg', in2: 'cb', operator: 'arithmetic', k1: 0, k2: 1, k3: 1, k4: 0, result: 'rgb' }));
-            filter.append(svgNode('feColorMatrix', { in: 'rgb', type: 'saturate', values: 1.5 }));
+            filter.append(svgNode('feColorMatrix', { in: 'rgb', type: 'saturate', values: p.sat ?? 1.5 }));
             defs.append(filter);
             const value = `url(#${id})`;
             el.style.backdropFilter = value;
@@ -216,7 +255,7 @@ const liquidGlass = (() => {
             el.lgFilter?.remove();
             el.lgFilter = filter;
         } catch (err) {
-            console.error('液態玻璃濾鏡建立失敗', err);
+            console.error('玻璃濾鏡建立失敗', err);
             el.style.backdropFilter = '';
             el.style.webkitBackdropFilter = '';
         }
@@ -240,7 +279,7 @@ const liquidGlass = (() => {
                 ro.observe(el);
             });
         } catch (err) {
-            console.error('液態玻璃初始化失敗', err);
+            console.error('玻璃濾鏡初始化失敗', err);
             root.classList.remove('lg-svg');
         }
     };
@@ -260,27 +299,26 @@ const liquidGlass = (() => {
 const buildFace = () => {
     try {
         const frag = document.createDocumentFragment();
-        frag.append(svgNode('circle', { class: 'f-ring', cx: 0, cy: 0, r: 96 }));
         for (let i = 0; i < 60; i++) {
             const major = i % 5 === 0;
             const a = (i * 6 * Math.PI) / 180;
             const sx = Math.sin(a);
             const sy = -Math.cos(a);
-            const inner = major ? 80 : 86;
+            const inner = major ? 66 : 71;
             frag.append(svgNode('line', {
                 class: major ? 'f-major' : 'f-minor',
                 x1: (sx * inner).toFixed(2),
                 y1: (sy * inner).toFixed(2),
-                x2: (sx * 92).toFixed(2),
-                y2: (sy * 92).toFixed(2)
+                x2: (sx * 75.5).toFixed(2),
+                y2: (sy * 75.5).toFixed(2)
             }));
         }
         for (let n = 1; n <= 12; n++) {
             const a = (n * 30 * Math.PI) / 180;
             const label = svgNode('text', {
                 class: n % 3 === 0 ? 'f-num f-quarter' : 'f-num',
-                x: (Math.sin(a) * 68).toFixed(2),
-                y: (-Math.cos(a) * 68).toFixed(2)
+                x: (Math.sin(a) * 56).toFixed(2),
+                y: (-Math.cos(a) * 56).toFixed(2)
             });
             label.textContent = n;
             frag.append(label);
@@ -377,7 +415,7 @@ const reveal = (commit, origin) => {
 };
 
 const syncMeta = () => {
-    const color = root.dataset.style === 'glass' ? (root.dataset.theme === 'dark' ? '#0b0d14' : '#eef1f7') : '#2c2f33';
+    const color = root.dataset.style === 'glass' ? (root.dataset.theme === 'dark' ? '#0e0f13' : '#eeeff1') : '#2c2f33';
     themeMeta?.setAttribute('content', color);
 };
 
@@ -538,6 +576,36 @@ document.addEventListener('pointermove', (e) => {
     });
 }, { passive: true });
 
+const wakeLock = (() => {
+    let sentinel = null;
+    let pending = false;
+    const standalone = () => matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone === true;
+
+    const acquire = async () => {
+        if (!('wakeLock' in navigator) || !standalone() || document.visibilityState !== 'visible') return;
+        if (pending || (sentinel && !sentinel.released)) return;
+        pending = true;
+        try {
+            sentinel = await navigator.wakeLock.request('screen');
+            sentinel.addEventListener('release', () => {
+                sentinel = null;
+            });
+        } catch (err) {
+            console.warn('螢幕常亮啟用失敗', err);
+        } finally {
+            pending = false;
+        }
+    };
+
+    const init = () => {
+        document.addEventListener('visibilitychange', acquire);
+        ['pointerdown', 'keydown'].forEach((type) => document.addEventListener(type, acquire, { passive: true }));
+        acquire();
+    };
+
+    return { init };
+})();
+
 const footer = document.getElementById('aki-footer');
 if (footer) {
     const text = footer.textContent;
@@ -597,6 +665,7 @@ try {
     paintHands();
     runClock();
     liquidGlass.init();
+    wakeLock.init();
 } catch (err) {
     console.error('時鐘初始化失敗', err);
 }

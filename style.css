@@ -467,17 +467,21 @@ html[data-style="classic"] [data-lg] {
 }
 
 html[data-style="glass"][data-theme="dark"] {
-    --bg: #07080d;
-    --bg-grad: radial-gradient(120% 90% at 30% 10%, #161a2c 0%, #0b0d16 55%, #05060a 100%);
-    --orb-1: #4a55ff;
-    --orb-2: #c03cff;
-    --orb-3: #0fb5a4;
-    --orb-4: #ff7a2f;
-    --orb-alpha: .62;
-    --dot: rgba(255, 255, 255, .13);
+    --bg: #0e0f13;
+    --bg-grad: radial-gradient(130% 100% at 50% 0%, #1b1d23 0%, #0e0f13 58%, #08090b 100%);
+    --glow: rgba(255, 255, 255, .07);
+    --dot: rgba(255, 255, 255, .16);
     --tick: rgba(255, 255, 255, .26);
     --tick-major: rgba(255, 255, 255, .62);
-    --sweep: rgba(150, 170, 255, .55);
+    --sweep: rgba(255, 255, 255, .16);
+    --dial: linear-gradient(165deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .02) 55%, rgba(255, 255, 255, .05)), rgba(18, 19, 24, .62);
+    --dial-edge: rgba(255, 255, 255, .14);
+    --dial-shade: rgba(0, 0, 0, .45);
+    --ring-tint: rgba(255, 255, 255, .008);
+    --ring-body: rgba(255, 255, 255, .045);
+    --ring-glint: rgba(255, 255, 255, .7);
+    --ring-shade: rgba(0, 0, 0, .22);
+    --watch-shadow: 0 34px 70px -34px rgba(0, 0, 0, .55), 0 10px 24px -14px rgba(0, 0, 0, .4);
     --ink: #f6f7fb;
     --ink-soft: rgba(246, 247, 251, .64);
     --ink-faint: rgba(246, 247, 251, .38);
@@ -512,17 +516,21 @@ html[data-style="glass"][data-theme="dark"] {
 }
 
 html[data-style="glass"][data-theme="light"] {
-    --bg: #eef0f7;
-    --bg-grad: radial-gradient(120% 90% at 30% 10%, #fbfbff 0%, #eef0f8 55%, #e2e5f1 100%);
-    --orb-1: #7d8bff;
-    --orb-2: #ff9ac1;
-    --orb-3: #5fd6c0;
-    --orb-4: #ffb072;
-    --orb-alpha: .78;
-    --dot: rgba(30, 36, 70, .16);
+    --bg: #eeeff1;
+    --bg-grad: radial-gradient(130% 100% at 50% 0%, #fbfbfc 0%, #eeeff1 58%, #e3e4e8 100%);
+    --glow: rgba(255, 255, 255, .9);
+    --dot: rgba(20, 24, 36, .2);
     --tick: rgba(18, 22, 36, .24);
     --tick-major: rgba(18, 22, 36, .62);
-    --sweep: rgba(70, 90, 255, .42);
+    --sweep: rgba(18, 22, 36, .1);
+    --dial: linear-gradient(165deg, rgba(255, 255, 255, .92), rgba(255, 255, 255, .62) 55%, rgba(255, 255, 255, .8)), rgba(246, 247, 249, .5);
+    --dial-edge: rgba(255, 255, 255, .95);
+    --dial-shade: rgba(40, 44, 60, .16);
+    --ring-tint: rgba(255, 255, 255, .04);
+    --ring-body: rgba(255, 255, 255, .3);
+    --ring-glint: rgba(255, 255, 255, 1);
+    --ring-shade: rgba(30, 34, 46, .12);
+    --watch-shadow: 0 34px 70px -34px rgba(30, 34, 46, .26), 0 10px 24px -14px rgba(30, 34, 46, .16);
     --ink: #121624;
     --ink-soft: rgba(18, 22, 36, .62);
     --ink-faint: rgba(18, 22, 36, .38);
@@ -536,8 +544,8 @@ html[data-style="glass"][data-theme="light"] {
     --rim-a: rgba(255, 255, 255, .95);
     --rim-b: rgba(255, 255, 255, .3);
     --sheen: rgba(255, 255, 255, .35);
-    --shadow: 0 40px 90px -30px rgba(46, 52, 110, .45), 0 12px 30px -12px rgba(46, 52, 110, .25);
-    --shadow-sm: 0 16px 40px -14px rgba(46, 52, 110, .4);
+    --shadow: 0 40px 90px -30px rgba(30, 34, 46, .32), 0 12px 30px -12px rgba(30, 34, 46, .18);
+    --shadow-sm: 0 16px 40px -14px rgba(30, 34, 46, .3);
     --ctrl: rgba(255, 255, 255, .45);
     --ctrl-hover: rgba(255, 255, 255, .75);
     --ctrl-line: rgba(18, 22, 36, .1);
@@ -548,12 +556,12 @@ html[data-style="glass"][data-theme="light"] {
     --sec: #e8590c;
     --hand: linear-gradient(90deg, #2a3045, #121624 50%, #222839);
     --hand-edge: rgba(255, 255, 255, .18);
-    --hand-shadow: rgba(30, 36, 80, .35);
+    --hand-shadow: rgba(30, 34, 46, .3);
     --cap: #121624;
     --tip-bg: rgba(255, 255, 255, .96);
     --tip-border: rgba(18, 22, 36, .08);
     --tip-text: #121624;
-    --tip-shadow: 0 8px 24px rgba(40, 46, 90, .22);
+    --tip-shadow: 0 8px 24px rgba(30, 34, 46, .2);
 }
 
 html[data-style="glass"] body {
@@ -574,69 +582,15 @@ html[data-style="glass"] .scene {
     background: var(--bg-grad);
 }
 
-.orb {
+.glow {
     position: absolute;
-    width: var(--s);
-    height: var(--s);
+    left: 50%;
+    top: 50%;
+    width: 140vmin;
+    height: 140vmin;
     border-radius: 50%;
-    opacity: var(--orb-alpha);
-    background: radial-gradient(circle, color-mix(in srgb, var(--c) 55%, transparent) 32%, transparent 68%);
-    animation: drift var(--t) ease-in-out infinite alternate;
-    will-change: transform;
-}
-
-.orb-a {
-    --s: 62vmax;
-    --t: 19s;
-    --dx: 14vw;
-    --dy: 10vh;
-    --c: var(--orb-1);
-    top: -22vmax;
-    left: -14vmax;
-}
-
-.orb-b {
-    --s: 56vmax;
-    --t: 23s;
-    --dx: -12vw;
-    --dy: 14vh;
-    --c: var(--orb-2);
-    top: -10vmax;
-    right: -20vmax;
-}
-
-.orb-c {
-    --s: 50vmax;
-    --t: 27s;
-    --dx: 10vw;
-    --dy: -12vh;
-    --c: var(--orb-3);
-    bottom: -26vmax;
-    left: 26vw;
-}
-
-.orb-d {
-    --s: 42vmax;
-    --t: 21s;
-    --dx: 16vw;
-    --dy: -8vh;
-    --c: var(--orb-4);
-    bottom: -18vmax;
-    left: -16vmax;
-}
-
-@keyframes drift {
-    0% {
-        transform: none;
-    }
-
-    50% {
-        transform: translate(var(--dx), var(--dy)) scale(1.14);
-    }
-
-    100% {
-        transform: translate(calc(var(--dx) * -.55), calc(var(--dy) * .8)) scale(.94);
-    }
+    background: radial-gradient(closest-side, var(--glow), transparent);
+    transform: translate(-50%, -58%);
 }
 
 .grid {
@@ -833,27 +787,89 @@ html[data-style="glass"] .glass-stage {
 }
 
 html[data-style="glass"] .watch {
-    box-shadow:
-        var(--shadow),
-        0 calc(var(--d) * .06) calc(var(--d) * .14) calc(var(--d) * -.05) var(--hand-shadow),
-        inset 0 2px 0 var(--spec-top),
-        inset 0 -2px 0 var(--spec-bottom),
-        inset 0 0 0 1px var(--glass-edge),
-        inset 0 0 calc(var(--d) * .06) var(--sheen),
-        inset 0 calc(var(--d) * .04) calc(var(--d) * .1) calc(var(--d) * -.06) var(--spec-top);
+    position: relative;
+    box-shadow: var(--watch-shadow);
 }
 
-html[data-style="glass"] .watch::after {
-    padding: 1.6px;
+.w-ring {
+    --in: 80%;
+    --ring-mask: radial-gradient(closest-side, transparent calc(var(--in) - .5px), #000 var(--in));
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--ring-tint);
+    backdrop-filter: blur(.6px) saturate(115%);
+    -webkit-backdrop-filter: blur(.6px) saturate(115%);
+    mask: var(--ring-mask);
+    -webkit-mask: var(--ring-mask);
+    pointer-events: none;
+}
+
+.w-ring::before,
+.w-ring::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+}
+
+.w-ring::before {
+    background:
+        radial-gradient(closest-side,
+            transparent var(--in),
+            var(--ring-shade) calc(var(--in) + .6%),
+            var(--ring-body) calc(var(--in) + 3.5%),
+            transparent calc(var(--in) + 8%),
+            transparent calc(var(--in) + 12%),
+            var(--ring-body) 96.5%,
+            var(--ring-shade) 99.4%,
+            transparent 100%),
+        radial-gradient(circle at 22% 15%, var(--ring-body), transparent 18%),
+        radial-gradient(circle at 80% 87%, var(--ring-body), transparent 14%);
+}
+
+.w-ring::after {
+    --rims: radial-gradient(closest-side,
+            transparent var(--in),
+            #000 calc(var(--in) + .2%),
+            transparent calc(var(--in) + 1.4%),
+            transparent 98%,
+            #000 99.6%,
+            transparent 100%);
+    background: conic-gradient(from 300deg,
+            var(--ring-glint),
+            transparent 22%,
+            transparent 34%,
+            color-mix(in srgb, var(--ring-glint) 55%, transparent) 50%,
+            transparent 66%,
+            transparent 82%,
+            var(--ring-glint));
+    mask: var(--rims);
+    -webkit-mask: var(--rims);
+}
+
+.w-dial {
+    position: absolute;
+    inset: 10%;
+    border-radius: 50%;
+    background: var(--dial);
+    backdrop-filter: blur(26px) saturate(150%);
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    box-shadow:
+        inset 0 1px 0 var(--dial-edge),
+        inset 0 0 0 1px color-mix(in srgb, var(--dial-edge) 45%, transparent),
+        inset 0 calc(var(--d) * .012) calc(var(--d) * .035) calc(var(--d) * -.01) var(--dial-shade),
+        0 calc(var(--d) * .006) calc(var(--d) * .02) var(--dial-shade);
+    pointer-events: none;
 }
 
 .w-sweep {
     position: absolute;
-    inset: 3%;
+    inset: 10%;
     border-radius: 50%;
-    background: conic-gradient(from 0deg, transparent 0deg 290deg, var(--sweep) 360deg);
-    mask: radial-gradient(closest-side, transparent 58%, #000 82%, #000 97%, transparent 100%);
-    -webkit-mask: radial-gradient(closest-side, transparent 58%, #000 82%, #000 97%, transparent 100%);
+    background: conic-gradient(from 0deg, transparent 0deg 300deg, var(--sweep) 360deg);
+    mask: radial-gradient(closest-side, transparent 72%, #000 86%, #000 98%, transparent 100%);
+    -webkit-mask: radial-gradient(closest-side, transparent 72%, #000 86%, #000 98%, transparent 100%);
     transform: rotate(var(--a, 0deg));
     opacity: .55;
     pointer-events: none;
@@ -866,12 +882,6 @@ html[data-style="glass"] .watch::after {
     height: 100%;
     overflow: visible;
     pointer-events: none;
-}
-
-.f-ring {
-    fill: none;
-    stroke: var(--tick);
-    stroke-width: .5;
 }
 
 .f-minor {
@@ -889,7 +899,7 @@ html[data-style="glass"] .watch::after {
 .f-num {
     fill: var(--ink);
     font-family: "Inter", sans-serif;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 300;
     text-anchor: middle;
     dominant-baseline: central;
@@ -897,7 +907,7 @@ html[data-style="glass"] .watch::after {
 }
 
 .f-quarter {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 400;
 }
 
@@ -913,11 +923,11 @@ html[data-style="glass"] .watch::after {
 }
 
 .w-top {
-    top: 30%;
+    top: 31%;
 }
 
 .w-bottom {
-    top: 61%;
+    top: 58.5%;
 }
 
 .w-date {
@@ -986,18 +996,18 @@ html[data-style="glass"] .watch::after {
 
 .h-hour {
     --w: calc(var(--d) * .03);
-    --l: calc(var(--d) * .25);
+    --l: calc(var(--d) * .22);
 }
 
 .h-min {
     --w: calc(var(--d) * .02);
-    --l: calc(var(--d) * .37);
+    --l: calc(var(--d) * .325);
 }
 
 .h-sec {
     --w: max(1.6px, calc(var(--d) * .005));
-    --tail: calc(var(--d) * .09);
-    --l: calc(var(--d) * .43 + var(--tail));
+    --tail: calc(var(--d) * .08);
+    --l: calc(var(--d) * .36 + var(--tail));
     bottom: calc(50% - var(--tail));
     transform-origin: 50% calc(100% - var(--tail));
     background: var(--sec);
@@ -1195,11 +1205,5 @@ html[data-style="glass"][data-theme="light"] #aki-footer {
 @media (max-width: 480px) {
     .watch {
         --d: min(calc(88vmin * var(--clock-scale, 1)), 96vmin);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .orb {
-        animation: none;
     }
 }

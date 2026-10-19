@@ -33,10 +33,7 @@
     </svg>
 
     <div class="scene" aria-hidden="true">
-        <div class="orb orb-a"></div>
-        <div class="orb orb-b"></div>
-        <div class="orb orb-c"></div>
-        <div class="orb orb-d"></div>
+        <div class="glow"></div>
         <div class="grid"></div>
     </div>
 
@@ -72,7 +69,7 @@
         </div>
         <span class="dock-divider"></span>
         <span class="tip-wrap wrap-style">
-            <button id="style-btn" class="top-btn" aria-label="切換成液態玻璃時鐘">
+            <button id="style-btn" class="top-btn" aria-label="切換成指針時鐘">
                 <svg class="ico-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="9"></circle>
@@ -84,7 +81,7 @@
                     <path d="M7 10v4M10.5 10v4M12.6 11h.01M12.6 13h.01M14.5 10h2.5v4h-2.5z"></path>
                 </svg>
             </button>
-            <span class="tip tip-align-end" id="style-tip">切換成液態玻璃時鐘</span>
+            <span class="tip tip-align-end" id="style-tip">切換成指針時鐘</span>
         </span>
         <span class="tip-wrap wrap-gear">
             <button id="settings-btn" class="top-btn gear" aria-label="設定">
@@ -111,7 +108,9 @@
     </div>
 
     <main class="glass-stage">
-        <div class="watch glass" id="watch" data-lg="dial" role="img" aria-label="指針時鐘">
+        <div class="watch" id="watch" role="img" aria-label="指針時鐘">
+            <div class="w-ring" data-lg="ring"></div>
+            <div class="w-dial"></div>
             <div class="w-sweep" id="w-sweep"></div>
             <svg class="w-face" id="w-face" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
             <div class="w-info w-top">
@@ -142,7 +141,7 @@
                     <label>時鐘樣式</label>
                     <div class="choice" id="style-choice" role="radiogroup" aria-label="時鐘樣式">
                         <button class="choice-btn" data-style="classic" role="radio">經典數字</button>
-                        <button class="choice-btn" data-style="glass" role="radio">液態玻璃指針</button>
+                        <button class="choice-btn" data-style="glass" role="radio">指針時鐘</button>
                     </div>
                 </div>
 
